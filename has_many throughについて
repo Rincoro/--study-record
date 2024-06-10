@@ -1,0 +1,29 @@
+まず、has_many throughは、ざっくりいうと、多対多の関係を持つ3つ以上のモデル間の関係性をアソシエーション設定する際の技法のことです。
+たとえば、書籍のデータを管理するbooksモデルと、著者のデータをもつauthoresモデルがあります。また、それと追加で、書籍のお気に入り機能のモデルlikesモデルもあります。
+この3つのモデルのアソシエーション設定を行う際に、、has_many throughを使います！
+たとえばこんな感じ！
+class Book < ApplicationRecord
+  has_many :likes
+  has_many :authores, through: :likes
+end
+
+class Like < ApplicationRecord
+  belongs_to :book
+  belongs_to :author
+end
+
+class Author < ApplicationRecord
+  has_many :likes
+  has_many :books, through: :likes
+end
+
+ちょっと疑問に思っちゃった自分がいるけど、
+上記のコードは、一種の本に対しても複数個お気に入り登録できるのに、
+class Like < ApplicationRecord 
+belongs_to :book belongs_to :author
+end
+でもいいのかなって思っちゃうけど...
+いいんです！！！
+これは、お互いのモデルが、一つのレコード忍耐して、多数のお気に入りという設定をlikesモデルに保存できるよっていう意味のアソシエーションなので、
+likesモデル内の一つのレコードに対して、bookモデルは一個だけ、authorモデルのデータも一個だけってことだよね！
+
