@@ -1,0 +1,3 @@
+ renderする際の引数の内容に注意！！
+<%= render 'boards/form', board: @board, comment: Comment.new %>
+の場合、 render先のファイル('boards/form'）ないに記載されている『board』、『comment』には何がはいるかを[board: @board, comment: Comment.new]部分で指定しています
