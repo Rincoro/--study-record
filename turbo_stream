@@ -1,0 +1,56 @@
+Turbo＿streamの使い方
+＜まずajax化について＞
+ajax化とは、基本的にWebページはクライアントとサーバー間の通信は、同期通信で、リロードしないと画面の変更ができない。
+同期通信とは、リロードして、一瞬だけ画面が白くなった後に、画面が変更されるような状況です。
+この同期通信の場合、ページが一瞬だけ真っ白になり、画面にページが表示されるまでの間は、ユーザーは他の操作を何もする事が出来ない。（webページを１から作り直しているから！）
+このままだと、いちいち画面が完成するのを待ってからジャないとページの操作ができない。これを解決するために、ajax化を行い、非同期通信にさせる！
+・非同期通信とは？
+非同期通信とは、サーバーとクライアント間が通信中で、サーバーが処理中でも、webページ上での操作がページの遷移なしでも可能になるような通信のこと。
+
+お待たせしました！turbo_streamの使い方についてです！
+turbo_streamは、ざっくりいうと、画面の遷移を一から行わなくても、画面の中の要素一部分（複数もできるよ！）だけを変更できるようにする機能のことだよ！
+＜使い方＞
+・まず、turbo-rails gem　をgemファイルにつかする！
+①コントローラーで、対応するturbo_stream用のviewファイルをレンダリングさせる。
+以下のコードは、boardモデルに掲示板を追加するcreateメソッドです
+----------------------------------
+def create
+  @board = Board.new(board_params)
+
+  respond_to do |format|
+    if @board.save
+      format.turbo_stream
+    else
+      format.html { render :new, status: :unprocessable_entity }
+    end
+  end
+end
+-------------------------------------
+上記のコードの場合、railsは自動で、対応する.turbo_stream.erbビューファイルを探索し、見つかったらそのビューをレンダリングします。便利ですね！
+今回の例の場合、app/views/comments/create.turbo_stream.erbに自動的にレンダリングされます。
+
+ちなみに、上記のコードをコントローラーに全く書かずに、通常のcreateアクションだけの場合でも、対応する.turbo_stream.erbビューファイルがアプリ内にあれば
+勝手に対応するturbo_stream用のviewファイルをレンダリングさせることもできます。
+注意としては全てのアクションがコントローラーで何もしなくていいというわけではないです。（createアクションや、deleteアクションのなど一部のアクションのみ勝手にレンダリングされます。）
+
+②直接コントローラーに、turbo_streamの指示を記入する
+--------------------------------------------
+def create
+  @board = Board.new(board_params)
+
+  respond_to do |format|
+    if @board.save
+      format.turbo_stream { render turbo_stream: turbo_stream.prepend('boards', partial: 'board') }
+    else
+      format.html { render :new, status: :unprocessable_entity }
+    end
+  end
+end
+------------------------------------------
+上記のコードは、コントローラー内で、turbo_streamのアクションおよび、アクション対象のid、その対象id
+があるviewファイルの名前を定義させている。
+create.turbo_stream.erbファイルを書かなくても、コントローラー内で、インラインレンダリングできる。
+create.turbo_stream.erbを書かなくても、create実行後、どんなturbo_streamアクションを？、どのidに対して？、そのidはどのファイルにあるのか？を決めることで、
+create.turbo_stream.erbが存在しなくても、turbo_streamを実行できる!
+
+状況に応じて、①②の使い方を分けていこう！
