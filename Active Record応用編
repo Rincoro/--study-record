@@ -1,0 +1,68 @@
+
+# Active Record応用編
+
+- **joinsメソッドでさらに奥の関連したテーブルを内部結合したいとき**
+
+joinsメソッドで、filmモデルに関連したpostモデルにさらに関連したcommentモデルも内部結合させたいときはどうしたらいいだろうって思ったことありませんか？
+
+そういうときはこんな感じで書くと2個おくのモデルも関連付けさせることができるんです！
+
+```ruby
+Film.joins(posts: :comments).where(comments: {created_at: Time.new(2020, 1, 1)..Time.new(2020, 3, 31) })
+```
+
+これで2020年1月1日~2020年3月30日までにコメントされた映画の抽出ができます！
+
+- **日付指定したいとき**
+
+whereメソッドで日付指定したい時は以下のようにします
+
+```ruby
+Film.select(:film_id, :title).joins(inventories: :rentals).where(rental: { rental_date: Time.new(2005).beginning_of_year..Time.new(2005).end_of_year, return_date: nil })
+```
+
+時間/日付を指定したいときは
+
+```ruby
+Time.new(日付・時間）.beginning_of_year..Time.new(締めたい時間・日付).end_of_year
+```
+
+というように範囲指定するといいです！
+
+ちなみに.end_of_yearは省略できます
+
+- **whereメソッドで関連した他からむで条件付けしたい時**
+
+filmモデルから、関連するactorモデルを参考にJ*OE SWANKが出ている映画を抽出している。*
+
+```ruby
+Film.joins(:actors).where(actor: { first_name: "JOE", last_name: "SWANK" }).select(:film_id, :title)
+```
+
+このように、whrereで別モデルのカラムデータを指定したい時は、
+
+```ruby
+where(関連した他モデル: { カラム名 : "内容"})
+```
+
+というように関連モデルをいち度指定する！
+
+- **selectの色々な書き方**
+
+selectで、抽出するカラムを選定する際に、いろんな書き方があって混乱しました。
+
+＜基本の書き方＞
+
+```ruby
+User.select(:name, :email)
+```
+
+これが基本的な書き方です。『:name, :email』で、大元のUserモデルのカラムを指定しています。
+
+＜モデル名をいちいち指定するやりかた＞
+
+```ruby
+user.joins(:posts).select("user.name, post.title").where(user: {name: "りんころ"})
+```
+
+このように””で囲んで、”モデル名.カラム名”でいちいちモデル名を指定できます。これはjoinsメソッドで複数モデルを参照するときに便利です。
