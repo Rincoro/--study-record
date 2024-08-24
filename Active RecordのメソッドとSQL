@@ -1,0 +1,176 @@
+# **Active RecordのメソッドとSQL**
+
+- Active Recordとは？
+Active Recordとは、Ruby on Railsのデータベースのテーブルを、rubyのクラスとして扱得るようになる仕組みのことを言います！そうなると、データベースのレコードをオブジェクトとして操作できるようになります！
+
+簡単にいうと、テーブル内のデータを簡単に操作できるようになるってこと！
+
+（例）`User`というモデルがある
+
+User.find(1) をコンソール上で実行すると以下のようになる。
+
+```jsx
+User.find(1)
+# SELECT `users`.* FROM `users` WHERE `users`.`id` = 1 LIMIT 1
+```
+
+これってつまり…。
+
+**Active Recordの操作では、SQLが実行されているということです！(SQL実行されない時もあるよ！）**
+
+⭐️この記事では、ActiveReocordメソッドで実行されているSQL文をまとめてみた！！！
+
+## **find**
+
+findメソッドでは(引数＝id)のデータを抽出するSQLが実行されています！
+
+```jsx
+User.find(1)
+# SELECT `users`.* FROM `users` WHERE `users`.`id` = 1 LIMIT 1
+```
+
+## find_by
+
+find_byメソッドは、カラム名を指定して、そのカラム内のレコード内容が一致するデータを抽出されます。
+
+ちなみに、find_byだと、SQLに”LIMIT 1”がついているので、複数のデータを取り出すことはできないです。
+
+```jsx
+User.find_by(id:3)
+# SELECT `users`.* FROM `users` WHERE `users`.`id` = 3 LIMIT 1
+
+User.find_by(id:[3,4,6])
+# SELECT `users`.* FROM `users` WHERE `users`.`id` IN (3, 4, 6) LIMIT 1
+↑これでも複数データを抽出できないよ
+```
+
+## **Where**
+
+whereはSQLと一緒で条件指定のメソッドです。
+
+```jsx
+User.where(email:"test@test.com")
+# SELECT `users`.* FROM `users` WHERE `users`.`email` = 'test@test.com'
+↑これは、whereメソッドで、emailカラムの内容が、'test@test.com'のデータのみという条件付けをしています
+
+Client.where(created_at: (Time.now.midnight - 1.day)..Time.now.midnight)
+# SELECT * FROM clients 
+WHERE (clients.created_at BETWEEN '2008-12-21 00:00:00' AND '2008-12-22 00:00:00')
+```
+
+## **select**
+
+selectメソッドもSQLと意味は同じですが、忘れていたので説明します。
+
+selectメソッドは、データ抽出するとき、表示させるカラム（列）を指定できるメソッドです。
+
+全てのカラム（列）を表示させたいときは『*』を使います。
+
+```jsx
+users = User.select(:name, :email)
+SELECT name, mail FROM users 
+↑usersにはnameとemailだけの情報が含まれたActive Recordのオブジェクトが返されるんだ
+```
+
+＜ポイント＞　**pluckメソッドとselectメソッドの違い**
+
+pluckメソッドとselectメソッドは実行されるSQLは同じですが、pluckは指定したカラムの値の配列を返すという点が異なります。
+
+参考：　
+
+[**Railsでのselectメソッドとpluckメソッドの使い分け**Zennhttps://zenn.dev › kumasaka › articles](https://zenn.dev/kumasaka/articles/d17ddda0c9476b)
+
+[data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAYFBMVEX///+Wyv9Cqf9JrP8vpP/y+P/f7v8foP8+qP+Bwf9WsP82pv/2+v+z2P/W6f+Kxf+m0v8pov+93f9fs/92vP/o8v/M5P96vv/G4f8Snv9ot//t9v+gz//l8f+Uyf/b7P8FaHJIAAAAwklEQVR4Ac1SRRaEMAwdqBd3h/vfcl5SHLInG+Rr5ffJ8XzGGBckLpXWmhvawAZACEk84oBHJB4CHlg6wECAkiQeQ8MgoQ2YhgY0nkKDLCdxgQEFbVBiw4rE6wwKeLSBhglcWGOMador7mFD97PkQRB01+2osGHvwtRLWIENhyNMX/EcG45HmKqvhAA0Pr5OGFZe8QQD6uNGZOEB3kSvNwJFSuCNyPBGvF2j9LTf0wHuInbagvnWEPaNL2tYECD3S/MHmqgJrQ/ETWcAAAAASUVORK5CYII=](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAYFBMVEX///+Wyv9Cqf9JrP8vpP/y+P/f7v8foP8+qP+Bwf9WsP82pv/2+v+z2P/W6f+Kxf+m0v8pov+93f9fs/92vP/o8v/M5P96vv/G4f8Snv9ot//t9v+gz//l8f+Uyf/b7P8FaHJIAAAAwklEQVR4Ac1SRRaEMAwdqBd3h/vfcl5SHLInG+Rr5ffJ8XzGGBckLpXWmhvawAZACEk84oBHJB4CHlg6wECAkiQeQ8MgoQ2YhgY0nkKDLCdxgQEFbVBiw4rE6wwKeLSBhglcWGOMador7mFD97PkQRB01+2osGHvwtRLWIENhyNMX/EcG45HmKqvhAA0Pr5OGFZe8QQD6uNGZOEB3kSvNwJFSuCNyPBGvF2j9LTf0wHuInbagvnWEPaNL2tYECD3S/MHmqgJrQ/ETWcAAAAASUVORK5CYII=)
+
+また、“as”を使って別のカラム名として抽出させることもできるよ！
+
+```ruby
+ Category.select("category.category_id, category.name, date(created_at) as ordered_date")
+ ↑これはcategoryのcreated_atを、ordered_dateという名前として抽出させるという意味です。
+ 
+ Category.select("category.category_id, category.name, sum(payment.amount) as revenue").joins(films: { inventories: { rentals: :payments } }).group("category.category_id, category.name").limit(5).order(revenue: :desc)
+ ↑このように計算式も入れられます！
+```
+
+## **destroy**
+
+destoryメソッドではSQLのDELETE文が実行されます。（消去）
+
+```ruby
+User.find(3).destroy
+# DELETE FROM `profiles` WHERE `profiles`.`id` = 3
+```
+
+## **limitとoffset**
+
+limitメソッドでは指定された件数のみのレコードを取り出せます。
+
+```ruby
+User.limit(2).to_sql
+# "SELECT `users`.* FROM `users` LIMIT 2"
+```
+
+offsetメソッドとは、順番をスキップして途中からその後のデータの抽出をできるようにするメソッドです！
+
+```ruby
+User.offset(2).limit(3).to_sql
+# "SELECT `users`.* FROM `users` LIMIT 3 OFFSET 2"
+```
+
+## **group**
+
+`group`メソッドは、指定したカラムでデータをグループ化するためのメソッドです。
+
+SQLでは、　『GROUP BY』が適応されます！
+
+```ruby
+User.select(:id, :name, 'AVG(price) AS average_price').group(:age)
+SELECT id, name, AVG(price) AS average_price
+FROM users
+GROUP BY age
+これで、年齢ごとの平均値を抽出できます。
+```
+
+## count
+
+countメソッドは各モデル(テーブル)のレコード数を獲得するメソッドです。
+
+```ruby
+User.count
+SELECT COUNT(*) FROM `users`
+User(モデル名).countと書くことで、該当のテーブルのレコードの数を取得できます
+```
+
+以下のように特定の条件下のレコード数を数えるときにも使えます。
+
+```ruby
+Blog.where(status: 'publish').count
+公開されている記事の本数（レコード）を数えることができます
+```
+
+参考：　
+
+[**【Rails】 世界で一番分りやすく詳しいcountメソッドの使い方**Pikawakahttps://pikawaka.com › rails › count](https://pikawaka.com/rails/count)
+
+## **joins**
+
+複数モデル（テーブル）がある場合関連するモデルも参照していると定義させるメソッドです。（つまり、関連した他のモデルのデータも条件に含ませたいなって思ったときに使う）
+
+**つまりjoinsメソッドは、テーブル同士を内部結合させるメソッドです**
+
+```ruby
+Inventory.joins(:films).where(film: { title: "BLANKET BEVERLY" }).size
+```
+
+この場合、joins(:film)でInventoryモデルに関連を持つfilmモデル内のカラム title:を条件にデータ抽出をしたかったので、
+
+joinsメソッドで内部結合して、whereメソッドで、filmモデルのカラムを条件づけられるようにした！ということです！
+
+⭐️`joins`を使うことで、関連モデルの情報を活用して、より複雑な条件でデータを取得できるようになります
+
+参考：
+
+[**【Rails】 joinsメソッドの使い方 ~ テーブル結合からネストまで学ぶ**Pikawakahttps://pikawaka.com › rails › joins](https://pikawaka.com/rails/joins)
+
+[data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAB4FBMVEUlZfIlZfIlZfIlZfIlZfIlZfIlZfIjZPQiY/QiY/UjZPMkZfIiZPQraO5GddlohsF/ka+FlKt8kLFig8U/ct4nZvEtaexph7+zq4jfwGjvyVz0y1n0y1jzy1ntyF3YvW2io5VTfNAmZfIkZfNBc92rp4/tx171zFjyylrhwmaKl6cwauokZPNGddrDs3z1y1jzylr1zFf2zFfxylujo5Uya+g4buS8r4Lrx1/Lt3ehopayq4nWvG+XnZ4pZ+8mZvGTm6G9sIFjg8Q0bOc+ct+Dk6zdwGrzylnqxmBohsBMeNXfwWiqp482beVbf8rXvW7AsX8ya+nPuXQ/ct9tiL3rxmBggsaGlaosae23rYaTm6A9ceDnxGJSe9B+kbC1rIdIdtjiwmbZvm1hg8XuyF3Ds30uaevZvmw+cd/lw2RNedV8kLK0rIguauvbv2tCc9wqZ++xqouOmaTsx16Ck61cgMnlxGPVvG+IlqhKd9fJtnnFtHs1beYuaewnZvA6cOJ1jLfRunNvibuQmqPcv2qoppGeoZiuqYzSunGcoJravmzVu3BZf8ulpJMzbOd2jbaeoJnjw2WNmKUwa+ooZvCRmqLmxGN9kbBnhsG0q4inpZJXfs1nhcFYfsxHdtl/kbB0QdghAAAAB3RSTlMEX9j9/+zXxZ5B8QAAAdVJREFUeAF80NNixEAUgOFVNEntTlK3OV3bZrmst7att68brP7b8w01Gq1Ob2iSXqf9mhOGFhFaDWloGanRtwZ6jUEZRdM0QyODIgVgubb2js6u7p7ePqoRQP0Dg0PDmBdGRsfGJybrADU1PSMK8B0WZ40mcw2gLFabHey8wyliAMHl9phVwOz12QB4f2A6GAq7BLBDJKoCsfj37olkqo+NpjNZDLm5eU4BqIVFAXJLy8z3vgjlCxhsxdKkAhh54MuV/9dxK6t28K9xMuj3iSCsc9KPbGzawLaFJICqBZzb3pGAgd4VQNyLSoDaPxDwYRXJ4OgYbCenrALk8Nl5c4AqZzh3cUnJ4CoH4rV8BHtTtPG3d/IO9w82sMWR/Ar06Hh6jklz5uU1B09HtPKj3t6j7N/Y/DmOyipgQFU7IwWUTk1JLTAQlXXs7HXq6hsagUFd3MSOFNR1zS3AcOMKDI9vbWvvkALGp3snL9BEhC+6jLp7eExNNIwMjQzB0d3bhxzdXCJdMjIt/RP0paEJZuKkyVwoCWbK1BT9adNnzPQGJbmUrlmz7XVQk5xy7ZySuaIcvPM85wtmO6lM4cFItNw8nCBBdk5O9GRPMOMQzHoEMy/B7A8At1FiyN6OR3wAAAAASUVORK5CYII=](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAB4FBMVEUlZfIlZfIlZfIlZfIlZfIlZfIlZfIjZPQiY/QiY/UjZPMkZfIiZPQraO5GddlohsF/ka+FlKt8kLFig8U/ct4nZvEtaexph7+zq4jfwGjvyVz0y1n0y1jzy1ntyF3YvW2io5VTfNAmZfIkZfNBc92rp4/tx171zFjyylrhwmaKl6cwauokZPNGddrDs3z1y1jzylr1zFf2zFfxylujo5Uya+g4buS8r4Lrx1/Lt3ehopayq4nWvG+XnZ4pZ+8mZvGTm6G9sIFjg8Q0bOc+ct+Dk6zdwGrzylnqxmBohsBMeNXfwWiqp482beVbf8rXvW7AsX8ya+nPuXQ/ct9tiL3rxmBggsaGlaosae23rYaTm6A9ceDnxGJSe9B+kbC1rIdIdtjiwmbZvm1hg8XuyF3Ds30uaevZvmw+cd/lw2RNedV8kLK0rIguauvbv2tCc9wqZ++xqouOmaTsx16Ck61cgMnlxGPVvG+IlqhKd9fJtnnFtHs1beYuaewnZvA6cOJ1jLfRunNvibuQmqPcv2qoppGeoZiuqYzSunGcoJravmzVu3BZf8ulpJMzbOd2jbaeoJnjw2WNmKUwa+ooZvCRmqLmxGN9kbBnhsG0q4inpZJXfs1nhcFYfsxHdtl/kbB0QdghAAAAB3RSTlMEX9j9/+zXxZ5B8QAAAdVJREFUeAF80NNixEAUgOFVNEntTlK3OV3bZrmst7att68brP7b8w01Gq1Ob2iSXqf9mhOGFhFaDWloGanRtwZ6jUEZRdM0QyODIgVgubb2js6u7p7ePqoRQP0Dg0PDmBdGRsfGJybrADU1PSMK8B0WZ40mcw2gLFabHey8wyliAMHl9phVwOz12QB4f2A6GAq7BLBDJKoCsfj37olkqo+NpjNZDLm5eU4BqIVFAXJLy8z3vgjlCxhsxdKkAhh54MuV/9dxK6t28K9xMuj3iSCsc9KPbGzawLaFJICqBZzb3pGAgd4VQNyLSoDaPxDwYRXJ4OgYbCenrALk8Nl5c4AqZzh3cUnJ4CoH4rV8BHtTtPG3d/IO9w82sMWR/Ar06Hh6jklz5uU1B09HtPKj3t6j7N/Y/DmOyipgQFU7IwWUTk1JLTAQlXXs7HXq6hsagUFd3MSOFNR1zS3AcOMKDI9vbWvvkALGp3snL9BEhC+6jLp7eExNNIwMjQzB0d3bhxzdXCJdMjIt/RP0paEJZuKkyVwoCWbK1BT9adNnzPQGJbmUrlmz7XVQk5xy7ZySuaIcvPM85wtmO6lM4cFItNw8nCBBdk5O9GRPMOMQzHoEMy/B7A8At1FiyN6OR3wAAAAASUVORK5CYII=)
+
