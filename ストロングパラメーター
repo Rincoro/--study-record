@@ -1,0 +1,113 @@
+一回ストロングパラメーターについて復習します！
+
+## *ストロングパラメーターって何？*
+
+ストロングパラメーターとは、意図しないところからのデータをモデルに保存しないように、
+
+指定したフォーマットから以外のデータをモデルに保存しないように制御する仕組みのこと！
+
+例えば、user情報を保存するモデルがあり、user登録機能が実装されたアプリがある。
+
+このアプリのuserコントローラーは以下の通りである。
+
+```ruby
+class UsersController < ApplicationController
+  skip_before_action :require_login, only: %i[new create]
+  add_flash_types :success, :danger
+  def new
+    @user = User.new
+  end
+
+  def create
+    @user = User.new(user_params)
+    if @user.save
+      redirect_to root_path, success: t('flashs.user.create')
+    else
+      flash[:danger] = t('flashs.user.failed')
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  def user_params
+    params.require(:user).permit(:email, :password, :password_confirmation, :last_name, :first_name)
+  end
+end
+```
+
+まず、
+
+```html
+  def create
+    @user = User.new(user_params)
+```
+
+上記のコードで、user登録フォームの入力内容を丸ごと取得している。
+
+そして、最後に
+
+```html
+private
+
+  def user_params
+    params.require(:user).permit(:email, :password, :password_confirmation, :last_name, :first_name)
+  end
+end
+```
+
+このコードがストロングパラメーターの部分です！！
+
+このコードは、userキーと、:email, :password, :password_confirmation, :last_name, 
+
+:first_nameキーを持つデータのみをモデルに保存することを受け付けますという意味です。
+
+ここで、疑問！
+
+userキーや、:first_nameパラメーターってどこで指定してるの？
+
+答えは、viewファイルにあります！！
+
+```html
+<%= form_with model: @user do |f| %>
+        <div class='form-group'>
+          <%= f.label :last_name %>
+          <%= f.text_field :last_name, class: 'form-control' %>
+        </div>
+        <div class='form-group'>
+          <%= f.label :first_name %>
+          <%= f.text_field :first_name, class: 'form-control' %>
+        </div>
+        <div class='form-group'>
+          <%= f.label :email %>
+          <%= f.email_field :email, class: 'form-control' %>
+        </div>
+        <div class='form-group'>
+          <%= f.label :password %>
+          <%= f.password_field :password, class: 'form-control' %>
+        </div>
+        <div class='form-group'>
+          <%= f.label :password_confirmation %>
+          <%= f.password_field :password_confirmation, class: 'form-control' %>
+        </div>
+```
+
+この部分！
+
+```html
+<%= form_with model: @user do |f| %>
+```
+
+このコードでは、@userで、このform_withで作られるフォーマットのデータは、
+
+全てuserキーを持っているという設定をつけることができる！！
+
+また、そのあと記載されている、
+
+```html
+<%= f.text_field :last_name, class: 'form-control' %>
+```
+
+このコードの、 :last_name部分で、このフォーマットは、 :last_nameキーを持つという設定がつけられている！
+
+このように、form_withの部分で、そのフォーマットは何のキーを持つか設定づけを行うことができる！！
